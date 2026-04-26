@@ -26,36 +26,40 @@ export default function HabitCard({
   return (
     <article
       data-testid={`habit-card-${slug}`}
-      className={`rounded-2xl border p-5 shadow-sm transition ${
+      className={`rounded-[2rem] border p-5 shadow-[0_20px_50px_rgba(61,45,29,0.08)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_28px_60px_rgba(61,45,29,0.14)] ${
         isCompletedToday
-          ? 'border-emerald-300 bg-emerald-50'
-          : 'border-slate-200 bg-white'
+          ? 'border-emerald-300 bg-[linear-gradient(180deg,#f5fff4,#eaf7e8)] hover:border-emerald-400'
+          : 'border-[#dfd2bd] bg-[rgba(255,251,245,0.92)] hover:border-[#c9a37a] hover:bg-[rgba(255,249,240,0.98)]'
       }`}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-slate-900">{habit.name}</h2>
-          <p className="text-sm text-slate-600">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#a1643d]">
+            Daily habit
+          </p>
+          <h2 className="text-xl font-black tracking-tight text-[#1d2430]">{habit.name}</h2>
+          <p className="text-sm text-[#6d5a48]">
             {habit.description || 'No description'}
           </p>
           {isCompletedToday ? (
-            <p className="text-xs font-medium text-emerald-700">
+            <p className="inline-flex rounded-full bg-[#dff2dd] px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
               Completed today
             </p>
           ) : null}
           <p
             data-testid={`habit-streak-${slug}`}
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-semibold tracking-[0.04em] text-[#355553]"
           >
             Current streak: {streak}
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 sm:w-48">
+        <div className="flex flex-wrap gap-2 sm:justify-end">
           <Button
             type="button"
             testId={`habit-complete-${slug}`}
-            variant={isCompletedToday ? 'secondary' : 'primary'}
+            variant={isCompletedToday ? 'secondary' : 'success'}
+            fullWidth={false}
             onClick={() => onToggleComplete(habit)}
           >
             {isCompletedToday ? 'Completed Today' : 'Mark Complete'}

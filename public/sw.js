@@ -1,4 +1,4 @@
-const CACHE_NAME = 'habit-tracker-shell-v1';
+const CACHE_NAME = 'habit-tracker-shell-v3';
 const APP_SHELL = [
   '/',
   '/login',
@@ -53,26 +53,26 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(event.request)
-        .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200) {
-            return networkResponse;
-          }
-
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
           const responseClone = networkResponse.clone();
 
-          caches.open(CACHE_NAME).then((cache) => {
+          void caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
           });
+        }
 
-          return networkResponse;
-        })
-        .catch(() => caches.match('/'));
-    })
+        return networkResponse;
+      })
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request);
+
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return caches.match('/');
+      })
   );
 });

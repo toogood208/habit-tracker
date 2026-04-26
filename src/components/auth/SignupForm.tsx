@@ -19,7 +19,7 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
     return (
         <form
             onSubmit={handleSubmit}
-            className="space-y-5 rounded-2xl bg-white p-6 shadow-lg"
+            className="app-panel space-y-5 rounded-[2rem] p-6"
         >
             <TextField
                 id="signup-email"
@@ -37,12 +37,13 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
                 value={password}
                 onChange={setPassword}
                 testId="auth-signup-password"
+                allowPasswordToggle
             />
 
             <FeedbackMessage message={error} variant="error" />
 
             <Button type="submit" testId="auth-signup-submit" variant="primary">
-                Sign Up
+                Create Account
             </Button>
 
         </form>

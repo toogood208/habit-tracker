@@ -20,7 +20,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     return (
         <form
             onSubmit={handleSubmit}
-            className="space-y-5 rounded-2xl bg-white p-6 shadow-lg"
+            className="app-panel space-y-5 rounded-[2rem] p-6"
         >
             <TextField
                 id="login-email"
@@ -38,12 +38,13 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                 value={password}
                 onChange={setPassword}
                 testId="auth-login-password"
+                allowPasswordToggle
             />
 
             <FeedbackMessage message={error} variant="error" />
 
             <Button type="submit" testId="auth-login-submit" variant="primary">
-                Log In
+                Enter Dashboard
             </Button>
         </form>
     );

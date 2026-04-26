@@ -4,9 +4,9 @@ type FeedbackMessageProps = {
 };
 
 const variantClasses = {
-  error: 'border border-red-200 bg-red-50 text-red-700',
-  success: 'border border-emerald-200 bg-emerald-50 text-emerald-700',
-  info: 'border border-sky-200 bg-sky-50 text-sky-700',
+  error: 'border border-[#e1b0ab] bg-[#fff0ee] text-[#9e3e33]',
+  success: 'border border-[#b8d5b6] bg-[#eef7ec] text-[#2d6a36]',
+  info: 'border border-[#b6d2dc] bg-[#edf7fa] text-[#215d73]',
 };
 
 export default function FeedbackMessage({
@@ -20,7 +20,7 @@ export default function FeedbackMessage({
   return (
     <p
       role="alert"
-      className={`rounded-xl px-4 py-3 text-sm ${variantClasses[variant]}`}
+      className={`rounded-2xl px-4 py-3 text-sm font-medium ${variantClasses[variant]}`}
     >
       {message}
     </p>

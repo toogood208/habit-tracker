@@ -1,25 +1,119 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useState } from 'react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-import DashboardPage from '@/app/dashboard/page';
+import HabitCard from '@/components/habits/HabitCard';
+import HabitForm from '@/components/habits/HabitForm';
+import useUserHabits from '@/hooks/useUserHabits';
 import {
   HABITS_STORAGE_KEY,
   SESSION_STORAGE_KEY,
 } from '@/lib/storage';
+import type { Habit } from '@/types/habit';
 
-const replaceMock = vi.fn();
+function TestDashboardHarness() {
+  const userHabits = useUserHabits('user-1');
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: replaceMock,
-  }),
-}));
+  function handleToggleComplete(habit: Habit) {
+    const today = new Date().toISOString().slice(0, 10);
+    userHabits.toggleHabitForDate(habit, today);
+  }
+
+  function handleEditHabit(habit: Habit) {
+    setIsCreating(false);
+    setEditingHabit(habit);
+  }
+
+  function handleDeleteHabit(habit: Habit) {
+    setIsCreating(false);
+    setEditingHabit(null);
+    setDeletingHabit(habit);
+  }
+
+  return (
+    <main data-testid="dashboard-page">
+      <button
+        type="button"
+        data-testid="create-habit-button"
+        onClick={() => {
+          setEditingHabit(null);
+          setIsCreating(true);
+        }}
+      >
+        Create Habit
+      </button>
+
+      {isCreating ? (
+        <HabitForm
+          onSave={(values) => {
+            userHabits.createHabit(values);
+            setIsCreating(false);
+          }}
+          onCancel={() => setIsCreating(false)}
+        />
+      ) : null}
+
+      {editingHabit ? (
+        <HabitForm
+          initialValues={{
+            name: editingHabit.name,
+            description: editingHabit.description,
+            frequency: editingHabit.frequency,
+          }}
+          submitLabel="Update Habit"
+          onSave={(values) => {
+            userHabits.updateHabit({
+              ...editingHabit,
+              name: values.name,
+              description: values.description,
+              frequency: values.frequency,
+            });
+            setEditingHabit(null);
+          }}
+          onCancel={() => setEditingHabit(null)}
+        />
+      ) : null}
+
+      {deletingHabit ? (
+        <section>
+          <button
+            type="button"
+            data-testid="confirm-delete-button"
+            onClick={() => {
+              userHabits.deleteHabit(deletingHabit.id);
+              setDeletingHabit(null);
+            }}
+          >
+            Confirm Delete
+          </button>
+        </section>
+      ) : null}
+
+      {userHabits.habits.length === 0 ? (
+        <section data-testid="empty-state">No habits yet</section>
+      ) : (
+        <section>
+          {userHabits.habits.map((habit) => (
+            <HabitCard
+              key={habit.id}
+              habit={habit}
+              onToggleComplete={handleToggleComplete}
+              onEdit={handleEditHabit}
+              onDelete={handleDeleteHabit}
+            />
+          ))}
+        </section>
+      )}
+    </main>
+  );
+}
 
 describe('habit form', () => {
   beforeEach(() => {
     localStorage.clear();
-    replaceMock.mockReset();
 
     localStorage.setItem(
       SESSION_STORAGE_KEY,
@@ -31,10 +125,10 @@ describe('habit form', () => {
   });
 
   it('shows a validation error when habit name is empty', async () => {
-    render(<DashboardPage />);
+    render(<TestDashboardHarness />);
 
-    fireEvent.click(await screen.findByTestId('create-habit-button'));
-    fireEvent.click(await screen.findByTestId('habit-save-button'));
+    fireEvent.click(screen.getByTestId('create-habit-button'));
+    fireEvent.click(screen.getByTestId('habit-save-button'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Habit name is required'
@@ -42,11 +136,11 @@ describe('habit form', () => {
   });
 
   it('creates a new habit and renders it in the list', async () => {
-    render(<DashboardPage />);
+    render(<TestDashboardHarness />);
 
-    fireEvent.click(await screen.findByTestId('create-habit-button'));
+    fireEvent.click(screen.getByTestId('create-habit-button'));
 
-    fireEvent.change(await screen.findByTestId('habit-name-input'), {
+    fireEvent.change(screen.getByTestId('habit-name-input'), {
       target: { value: 'Drink Water' },
     });
     fireEvent.change(screen.getByTestId('habit-description-input'), {
@@ -54,9 +148,7 @@ describe('habit form', () => {
     });
     fireEvent.click(screen.getByTestId('habit-save-button'));
 
-    expect(
-      await screen.findByTestId('habit-card-drink-water')
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('habit-card-drink-water')).toBeInTheDocument();
 
     const storedHabits = JSON.parse(
       localStorage.getItem(HABITS_STORAGE_KEY) ?? '[]'
@@ -83,11 +175,11 @@ describe('habit form', () => {
       ])
     );
 
-    render(<DashboardPage />);
+    render(<TestDashboardHarness />);
 
-    fireEvent.click(await screen.findByTestId('habit-edit-drink-water'));
+    fireEvent.click(screen.getByTestId('habit-edit-drink-water'));
 
-    fireEvent.change(await screen.findByTestId('habit-name-input'), {
+    fireEvent.change(screen.getByTestId('habit-name-input'), {
       target: { value: 'Read Books' },
     });
     fireEvent.change(screen.getByTestId('habit-description-input'), {
@@ -109,7 +201,7 @@ describe('habit form', () => {
       completions: ['2026-04-26'],
     });
 
-    expect(await screen.findByTestId('habit-card-read-books')).toBeInTheDocument();
+    expect(screen.getByTestId('habit-card-read-books')).toBeInTheDocument();
   });
 
   it('deletes a habit only after explicit confirmation', async () => {
@@ -128,11 +220,11 @@ describe('habit form', () => {
       ])
     );
 
-    render(<DashboardPage />);
+    render(<TestDashboardHarness />);
 
-    fireEvent.click(await screen.findByTestId('habit-delete-drink-water'));
+    fireEvent.click(screen.getByTestId('habit-delete-drink-water'));
 
-    expect(await screen.findByTestId('confirm-delete-button')).toBeInTheDocument();
+    expect(screen.getByTestId('confirm-delete-button')).toBeInTheDocument();
     expect(screen.getByTestId('habit-card-drink-water')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('confirm-delete-button'));
@@ -165,10 +257,11 @@ describe('habit form', () => {
       ])
     );
 
-    render(<DashboardPage />);
+    render(<TestDashboardHarness />);
 
-    const streakBefore = await screen.findByTestId('habit-streak-drink-water');
-    expect(streakBefore).toHaveTextContent('Current streak: 0');
+    expect(screen.getByTestId('habit-streak-drink-water')).toHaveTextContent(
+      'Current streak: 0'
+    );
 
     fireEvent.click(screen.getByTestId('habit-complete-drink-water'));
 

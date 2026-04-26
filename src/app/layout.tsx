@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   title: 'Habit Tracker',
   description: 'Track your daily habits and keep your streaks going.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icons/icon-192.png',
+    shortcut: '/icons/icon-192.png',
+    apple: '/icons/icon-192.png',
+  },
 };
 
 export default function RootLayout({
@@ -16,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="antialiased">
         <ServiceWorkerRegistration />
         {children}
       </body>
