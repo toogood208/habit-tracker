@@ -1,3 +1,11 @@
+function getPreviousDate(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+    const utcDate = new Date(Date.UTC(year, month - 1, day));
+    utcDate.setUTCDate(utcDate.getUTCDate() - 1);
+
+    return utcDate.toISOString().slice(0, 10);
+}
+
 export function calculateCurrentStreak(
     completions: string[],
     today?: string
@@ -10,15 +18,14 @@ export function calculateCurrentStreak(
 
     const completedDays = new Set(uniqueDates);
     let streak = 0;
-    let cursor = new Date(`${currentDay}T00:00:00`);
+    let cursor = currentDay;
     while (true) {
-        const dateKey = cursor.toISOString().slice(0, 10);
-        if (!completedDays.has(dateKey)) {
+        if (!completedDays.has(cursor)) {
             break;
         }
 
         streak += 1;
-        cursor.setDate(cursor.getDate() - 1);
+        cursor = getPreviousDate(cursor);
     }
     return streak;
 }
