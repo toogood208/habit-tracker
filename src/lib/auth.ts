@@ -107,7 +107,22 @@ export function logoutUser(): void {
 }
 
 export function getActiveSession(): Session | null {
-    return getStoredSession();
+    const session = getStoredSession();
+
+    if (!session) {
+        return null;
+    }
+
+    const matchingUser = getStoredUsers().find(
+        (user) => user.id === session.userId && user.email === session.email
+    );
+
+    if (!matchingUser) {
+        setStoredSession(null);
+        return null;
+    }
+
+    return session;
 }
 
 export function isAuthenticated(): boolean {

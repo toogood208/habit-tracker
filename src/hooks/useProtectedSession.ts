@@ -18,12 +18,16 @@ export default function useProtectedSession(): ProtectedSessionResult {
 
   useEffect(() => {
     const activeSession = getActiveSession();
-    setSession(activeSession);
-    setIsReady(true);
 
     if (!activeSession) {
+      setSession(null);
+      setIsReady(true);
       router.replace('/login');
+      return;
     }
+
+    setSession(activeSession);
+    setIsReady(true);
   }, [router]);
 
   return {

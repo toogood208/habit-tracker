@@ -28,6 +28,11 @@ function writeStorage<T>(key: string, value: T): void {
     return;
   }
 
+  if (value === null) {
+    window.localStorage.removeItem(key);
+    return;
+  }
+
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 

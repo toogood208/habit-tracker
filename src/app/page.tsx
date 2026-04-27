@@ -1,9 +1,10 @@
 'use client';
 
-import SplashScreen from "@/components/shared/SplashScreen";
-import { getActiveSession } from "@/lib/auth";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+import SplashScreen from '@/components/shared/SplashScreen';
+import { getStoredSession } from '@/lib/storage';
 
 const SPLASH_DELAY_MS = 1000;
 
@@ -12,7 +13,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      const session = getActiveSession();
+      const session = getStoredSession();
 
       if (session) {
         router.replace('/dashboard');
@@ -24,7 +25,7 @@ export default function HomePage() {
 
     return () => {
       window.clearTimeout(timeout);
-    }
+    };
   }, [router]);
 
   return <SplashScreen />;
