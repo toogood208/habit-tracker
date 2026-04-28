@@ -1,51 +1,63 @@
 'use client';
 
+import { useState } from 'react';
+
 import TextField from '@/components/shared/TextField';
-import useAuthForm from '@/hooks/useAuthForm';
-import FeedbackMessage from '../shared/FeedbackMessage';
-import Button from '../shared/Button';
+import { signupUser } from '@/lib/auth';
+import Button from '@/components/shared/Button';
+import FeedbackMessage from '@/components/shared/FeedbackMessage';
 
 type SignupFormProps = {
-    onSuccess: () => void;
+  onSuccess: () => void;
 };
 
 export default function SignupForm({ onSuccess }: SignupFormProps) {
-    const { email, password, error, setEmail, setPassword, handleSubmit } =
-        useAuthForm({
-            mode: 'signup',
-            onSuccess,
-        });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-    return (
-        <form
-            onSubmit={handleSubmit}
-            className="app-panel space-y-5 rounded-[2rem] p-6"
-        >
-            <TextField
-                id="signup-email"
-                label="Email"
-                type="email"
-                value={email}
-                onChange={setEmail}
-                testId="auth-signup-email"
-            />
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
 
-            <TextField
-                id="signup-password"
-                label="Password"
-                type="password"
-                value={password}
-                onChange={setPassword}
-                testId="auth-signup-password"
-                allowPasswordToggle
-            />
+    const result = signupUser(email, password);
 
-            <FeedbackMessage message={error} variant="error" />
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
 
-            <Button type="submit" testId="auth-signup-submit" variant="primary">
-                Create Account
-            </Button>
+    onSuccess();
+  }
 
-        </form>
-    );
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="app-panel space-y-5 rounded-[2rem] p-6"
+    >
+      <TextField
+        id="signup-email"
+        label="Email"
+        type="email"
+        value={email}
+        onChange={setEmail}
+        testId="auth-signup-email"
+      />
+
+      <TextField
+        id="signup-password"
+        label="Password"
+        type="password"
+        value={password}
+        onChange={setPassword}
+        testId="auth-signup-password"
+      />
+
+      <FeedbackMessage message={error} variant="error" />
+
+      <Button type="submit" testId="auth-signup-submit" variant="primary">
+        Create Account
+      </Button>
+    </form>
+  );
 }

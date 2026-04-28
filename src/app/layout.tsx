@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import ServiceWorkerRegistration from '@/components/shared/ServiceWorkerRegistration';
+import { APP_DESCRIPTION, APP_NAME } from '@/lib/constants';
 
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Habit Tracker',
-  description: 'Track your daily habits and keep your streaks going.',
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
   manifest: '/manifest.json',
   icons: {
     icon: '/icons/icon-192.png',

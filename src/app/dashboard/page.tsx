@@ -1,51 +1,70 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import HabitCard from '@/components/habits/HabitCard';
 import HabitForm from '@/components/habits/HabitForm';
+import HabitList from '@/components/habits/HabitList';
 import Button from '@/components/shared/Button';
+import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import { logoutUser } from '@/lib/auth';
-import useProtectedSession from '@/hooks/useProtectedSession';
-import useUserHabits from '@/hooks/useUserHabits';
+import { APP_NAME, ROUTES } from '@/lib/constants';
+import {
+  createHabit,
+  deleteHabit,
+  getHabitsForUser,
+  toggleHabitForDate,
+  updateHabit,
+} from '@/lib/habits';
+import type { Session } from '@/types/auth';
 import type { Habit } from '@/types/habit';
 
 export default function DashboardPage() {
-    const { isReady, session } = useProtectedSession();
-    const userHabits = useUserHabits(session?.userId ?? null);
+  return (
+    <ProtectedRoute>
+      {(session) => <DashboardContent session={session} />}
+    </ProtectedRoute>
+  );
+}
+
+type DashboardContentProps = {
+  session: Session;
+};
+
+function DashboardContent({ session }: DashboardContentProps) {
+    const [habits, setHabits] = useState<Habit[]>([]);
     const [isCreating, setIsCreating] = useState(false);
     const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
     const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
 
+  useEffect(() => {
+    setHabits(getHabitsForUser(session.userId));
+  }, [session.userId]);
 
-    if (!isReady) {
-        return null;
-    }
-
-  if (!session) {
-    return null;
+  function refreshHabits() {
+    setHabits(getHabitsForUser(session.userId));
   }
 
   function handleToggleComplete(habit: Habit) {
     const today = new Date().toISOString().slice(0, 10);
-    userHabits.toggleHabitForDate(habit, today);
+    toggleHabitForDate(habit, today);
+    refreshHabits();
   }
 
-    function handleEditHabit(habit: Habit) {
-        setIsCreating(false);
-        setEditingHabit(habit);
-    }
+  function handleEditHabit(habit: Habit) {
+    setIsCreating(false);
+    setEditingHabit(habit);
+  }
 
   function handleDeleteHabit(habit: Habit) {
-        setIsCreating(false);
-        setEditingHabit(null);
-        setDeletingHabit(habit);
-    }
+    setIsCreating(false);
+    setEditingHabit(null);
+    setDeletingHabit(habit);
+  }
 
   function handleLogout() {
     logoutUser();
-    window.location.href = '/login';
+    window.location.href = ROUTES.login;
   }
 
   function handleOpenCreateHabit() {
@@ -66,7 +85,7 @@ export default function DashboardPage() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#a1643d]">
-                                Habit Tracker
+                                {APP_NAME}
                             </p>
                             <p className="mt-2 text-sm font-medium text-[#6d5a48]">
                                 Signed in as <span className="font-bold text-[#1d2430]">{session.email}</span>
@@ -85,7 +104,7 @@ export default function DashboardPage() {
                     </div>
                 </header>
 
-                {userHabits.habits.length > 0 ? (
+                {habits.length > 0 ? (
                     <section className="flex justify-end">
                         <Button
                             type="button"
@@ -103,7 +122,8 @@ export default function DashboardPage() {
                     <HabitForm
                         key="create-habit"
                         onSave={(values) => {
-                            userHabits.createHabit(values);
+                            createHabit(session.userId, values);
+                            refreshHabits();
                             setIsCreating(false);
                         }}
                         onCancel={() => setIsCreating(false)}
@@ -120,12 +140,13 @@ export default function DashboardPage() {
                         }}
                         submitLabel="Update Habit"
                         onSave={(values) => {
-                            userHabits.updateHabit({
+                            updateHabit({
                                 ...editingHabit,
                                 name: values.name,
                                 description: values.description,
                                 frequency: values.frequency,
                             });
+                            refreshHabits();
                             setEditingHabit(null);
                         }}
                         onCancel={() => setEditingHabit(null)}
@@ -161,7 +182,8 @@ export default function DashboardPage() {
                                     variant="danger"
                                     fullWidth={false}
                                     onClick={() => {
-                                        userHabits.deleteHabit(deletingHabit.id);
+                                        deleteHabit(deletingHabit.id);
+                                        refreshHabits();
                                         setDeletingHabit(null);
                                     }}
                                 >
@@ -182,7 +204,7 @@ export default function DashboardPage() {
                 ) : null}
 
 
-                {userHabits.habits.length === 0 && !isCreating ? (
+                {habits.length === 0 && !isCreating ? (
                     <section
                         data-testid="empty-state"
                         className="app-panel mt-8 rounded-[2.5rem] border border-dashed p-8 text-center sm:mt-12"
@@ -216,17 +238,12 @@ export default function DashboardPage() {
                         </div>
                     </section>
                 ) : (
-                    <section className="space-y-4">
-                        {userHabits.habits.map((habit) => (
-                            <HabitCard
-                                key={habit.id}
-                                habit={habit}
-                                onToggleComplete={handleToggleComplete}
-                                onEdit={handleEditHabit}
-                                onDelete={handleDeleteHabit}
-                            />
-                        ))}
-                    </section>
+                    <HabitList
+                        habits={habits}
+                        onToggleComplete={handleToggleComplete}
+                        onEdit={handleEditHabit}
+                        onDelete={handleDeleteHabit}
+                    />
                 )}
             </div>
         </main>

@@ -2,9 +2,15 @@ import { useState } from 'react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-import HabitCard from '@/components/habits/HabitCard';
 import HabitForm from '@/components/habits/HabitForm';
-import useUserHabits from '@/hooks/useUserHabits';
+import HabitList from '@/components/habits/HabitList';
+import {
+  createHabit,
+  deleteHabit,
+  getHabitsForUser,
+  toggleHabitForDate,
+  updateHabit,
+} from '@/lib/habits';
 import {
   HABITS_STORAGE_KEY,
   SESSION_STORAGE_KEY,
@@ -12,14 +18,19 @@ import {
 import type { Habit } from '@/types/habit';
 
 function TestDashboardHarness() {
-  const userHabits = useUserHabits('user-1');
+  const [habits, setHabits] = useState<Habit[]>(() => getHabitsForUser('user-1'));
   const [isCreating, setIsCreating] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
 
+  function refreshHabits() {
+    setHabits(getHabitsForUser('user-1'));
+  }
+
   function handleToggleComplete(habit: Habit) {
     const today = new Date().toISOString().slice(0, 10);
-    userHabits.toggleHabitForDate(habit, today);
+    toggleHabitForDate(habit, today);
+    refreshHabits();
   }
 
   function handleEditHabit(habit: Habit) {
@@ -49,7 +60,8 @@ function TestDashboardHarness() {
       {isCreating ? (
         <HabitForm
           onSave={(values) => {
-            userHabits.createHabit(values);
+            createHabit('user-1', values);
+            refreshHabits();
             setIsCreating(false);
           }}
           onCancel={() => setIsCreating(false)}
@@ -65,12 +77,13 @@ function TestDashboardHarness() {
           }}
           submitLabel="Update Habit"
           onSave={(values) => {
-            userHabits.updateHabit({
+            updateHabit({
               ...editingHabit,
               name: values.name,
               description: values.description,
               frequency: values.frequency,
             });
+            refreshHabits();
             setEditingHabit(null);
           }}
           onCancel={() => setEditingHabit(null)}
@@ -83,7 +96,8 @@ function TestDashboardHarness() {
             type="button"
             data-testid="confirm-delete-button"
             onClick={() => {
-              userHabits.deleteHabit(deletingHabit.id);
+              deleteHabit(deletingHabit.id);
+              refreshHabits();
               setDeletingHabit(null);
             }}
           >
@@ -92,20 +106,15 @@ function TestDashboardHarness() {
         </section>
       ) : null}
 
-      {userHabits.habits.length === 0 ? (
+      {habits.length === 0 ? (
         <section data-testid="empty-state">No habits yet</section>
       ) : (
-        <section>
-          {userHabits.habits.map((habit) => (
-            <HabitCard
-              key={habit.id}
-              habit={habit}
-              onToggleComplete={handleToggleComplete}
-              onEdit={handleEditHabit}
-              onDelete={handleDeleteHabit}
-            />
-          ))}
-        </section>
+        <HabitList
+          habits={habits}
+          onToggleComplete={handleToggleComplete}
+          onEdit={handleEditHabit}
+          onDelete={handleDeleteHabit}
+        />
       )}
     </main>
   );

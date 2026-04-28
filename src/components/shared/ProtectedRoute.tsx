@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { getActiveSession } from '@/lib/auth';
+import { ROUTES } from '@/lib/constants';
 import type { Session } from '@/types/auth';
 
-type ProtectedSessionResult = {
-  isReady: boolean;
-  session: Session | null;
+type ProtectedRouteProps = {
+  children: (session: Session) => React.ReactNode;
 };
 
-export default function useProtectedSession(): ProtectedSessionResult {
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -22,7 +22,7 @@ export default function useProtectedSession(): ProtectedSessionResult {
     if (!activeSession) {
       setSession(null);
       setIsReady(true);
-      router.replace('/login');
+      router.replace(ROUTES.login);
       return;
     }
 
@@ -30,8 +30,9 @@ export default function useProtectedSession(): ProtectedSessionResult {
     setIsReady(true);
   }, [router]);
 
-  return {
-    isReady,
-    session,
-  };
+  if (!isReady || !session) {
+    return null;
+  }
+
+  return <>{children(session)}</>;
 }

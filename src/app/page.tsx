@@ -4,9 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import SplashScreen from '@/components/shared/SplashScreen';
+import { ROUTES, SPLASH_DELAY_MS } from '@/lib/constants';
 import { getStoredSession } from '@/lib/storage';
-
-const SPLASH_DELAY_MS = 1000;
 
 export default function HomePage() {
   const router = useRouter();
@@ -16,11 +15,11 @@ export default function HomePage() {
       const session = getStoredSession();
 
       if (session) {
-        router.replace('/dashboard');
+        router.replace(ROUTES.dashboard);
         return;
       }
 
-      router.replace('/login');
+      router.replace(ROUTES.login);
     }, SPLASH_DELAY_MS);
 
     return () => {
